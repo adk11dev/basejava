@@ -6,9 +6,10 @@ import exception.StorageException;
 import model.Resume;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-abstract class AbstractArrayStorageTest {
+abstract class AbstractStorageTest {
     private final Storage storage;
     private static final String UUID_1 = "uuid1";
     private static final String UUID_2 = "uuid2";
@@ -20,21 +21,17 @@ abstract class AbstractArrayStorageTest {
     private static final Resume RESUME_UUID3 = new Resume(UUID_3);
     private static final Resume RESUME_UUID4 = new Resume(UUID_4);
 
-    public AbstractArrayStorageTest(Storage storage) {
+    public AbstractStorageTest(Storage storage) {
         this.storage = storage;
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         storage.clear();
 
-        try {
-            storage.save(RESUME_UUID1);
-            storage.save(RESUME_UUID2);
-            storage.save(RESUME_UUID3);
-        } catch (StorageException e){
-            Assertions.fail("Overflow occurred prematurely");
-        }
+        storage.save(RESUME_UUID1);
+        storage.save(RESUME_UUID2);
+        storage.save(RESUME_UUID3);
     }
 
     @Test
@@ -52,9 +49,9 @@ abstract class AbstractArrayStorageTest {
     void update() {
         Resume expectedResume = RESUME_UUID3;
 
-        storage.update(RESUME_UUID3);
+        storage.update(RESUME_UUID2);
 
-        Assertions.assertEquals(expectedResume, storage.get(UUID_3));
+        Assertions.assertTrue(expectedResume == storage.get(UUID_3));
     }
 
     @Test
@@ -65,6 +62,13 @@ abstract class AbstractArrayStorageTest {
         storage.delete(UUID_1);
 
         Assertions.assertEquals(expectedSize, storage.size());
+    }
+
+    @Test
+    public void deleteNotExist() {
+        Assertions.assertThrows(NotExistStorageException.class, () -> {
+            storage.delete("dummy");
+        });
     }
 
     @Test
@@ -79,8 +83,9 @@ abstract class AbstractArrayStorageTest {
     @Test
     void getAll() {
         int expectedSize = storage.size();
+        Resume[] result = storage.getAll();
 
-        Assertions.assertEquals(expectedSize, storage.getAll().length);
+        Assertions.assertEquals(expectedSize, result.length);
     }
 
     @Test
@@ -104,10 +109,18 @@ abstract class AbstractArrayStorageTest {
         });
     }
 
+    @Disabled
     @Test
     void checkStorageOverflow() {
         Assertions.assertThrows(StorageException.class, () -> {
-            storage.save(RESUME_UUID4);
+            try {
+                for (int i = 4; i <= AbstractArrayStorage.STORAGE_LIMIT; i++) {
+                    storage.save(new Resume());
+                }
+            } catch (StorageException e) {
+                Assertions.fail();
+            }
+            storage.save(new Resume());
         });
     }
 
