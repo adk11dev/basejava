@@ -2,24 +2,24 @@ package storage;
 
 import exception.ExistStorageException;
 import exception.NotExistStorageException;
-import exception.StorageException;
 import model.Resume;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 abstract class AbstractStorageTest {
-    private final Storage storage;
+    protected final Storage storage;
     private static final String UUID_1 = "uuid1";
     private static final String UUID_2 = "uuid2";
     private static final String UUID_3 = "uuid3";
     private static final String UUID_4 = "uuid4";
 
-    private static final Resume RESUME_UUID1 = new Resume(UUID_1);
-    private static final Resume RESUME_UUID2 = new Resume(UUID_2);
-    private static final Resume RESUME_UUID3 = new Resume(UUID_3);
-    private static final Resume RESUME_UUID4 = new Resume(UUID_4);
+    private static final Resume RESUME_UUID1 = new Resume(UUID_1, "Name1");
+    private static final Resume RESUME_UUID2 = new Resume(UUID_2, "Name2");
+    private static final Resume RESUME_UUID3 = new Resume(UUID_3, "Name3");
+    private static final Resume RESUME_UUID4 = new Resume(UUID_4, "Name4");
 
     public AbstractStorageTest(Storage storage) {
         this.storage = storage;
@@ -47,9 +47,9 @@ abstract class AbstractStorageTest {
 
     @Test
     void update() {
-        Resume expectedResume = RESUME_UUID3;
+        Resume expectedResume = new Resume(UUID_3, "new fullName");
 
-        storage.update(RESUME_UUID2);
+        storage.update(expectedResume);
 
         Assertions.assertTrue(expectedResume == storage.get(UUID_3));
     }
@@ -81,11 +81,11 @@ abstract class AbstractStorageTest {
     }
 
     @Test
-    void getAll() {
+    void getAllSorted() {
         int expectedSize = storage.size();
-        Resume[] result = storage.getAll();
+        List<Resume> result = storage.getAllSorted();
 
-        Assertions.assertEquals(expectedSize, result.length);
+        Assertions.assertEquals(expectedSize, result.size());
     }
 
     @Test
@@ -109,20 +109,6 @@ abstract class AbstractStorageTest {
         });
     }
 
-    @Disabled
-    @Test
-    void checkStorageOverflow() {
-        Assertions.assertThrows(StorageException.class, () -> {
-            try {
-                for (int i = 4; i <= AbstractArrayStorage.STORAGE_LIMIT; i++) {
-                    storage.save(new Resume());
-                }
-            } catch (StorageException e) {
-                Assertions.fail();
-            }
-            storage.save(new Resume());
-        });
-    }
 
     @Test
     void size() {
